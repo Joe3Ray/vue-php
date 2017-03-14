@@ -887,7 +887,7 @@ function genCode(node) {
             if (test.isStatic) {
                 return test.value ? consequent : alternate;
             } else {
-                return ret(("(" + (test.code) + "?" + (consequent.code) + ":" + (alternate.code) + ")"));
+                return ret(("(" + (test.code) + "?" + (consequent.code) + ":(" + (alternate.code) + "))"));
             }
         default:
             throw new Error("Unknow type \"" + node.type + "\"");
@@ -2099,7 +2099,8 @@ var modifierCode = {
 function genHandlers (events, native) {
   var res = native ? '"nativeOn"=>array(' : '"on"=>array(';
   for (var name in events) {
-    res += "\"" + name + "\"=>" + (genHandler(name, events[name])) + ",";
+    //res += "\"" + name + "\"=>" + (genHandler(name, events[name])) + ",";
+    res += "\"" + name + "\"=> 'function',";
   }
   return res.slice(0, -1) + ')'
 }
@@ -2279,7 +2280,7 @@ function genIfConditions (conditions) {
 
   var condition = conditions.shift();
   if (condition.exp) {
-    return ("(" + transformExpression(condition.exp) + ")?" + (genTernaryExp(condition.block)) + ":" + (genIfConditions(conditions)))
+    return ("(" + transformExpression(condition.exp) + ")?" + (genTernaryExp(condition.block)) + ":(" + (genIfConditions(conditions))) + ')'
   } else {
     return ("" + (genTernaryExp(condition.block)))
   }
@@ -2345,15 +2346,12 @@ function genData (el) {
     data += "\"domProps\"=>array(" + (genProps(el.props)) + "),";
   }
   // event handlers
-  /**
-   * Todo: 事件监听
   if (el.events) {
     data += (genHandlers(el.events)) + ",";
   }
   if (el.nativeEvents) {
     data += (genHandlers(el.nativeEvents, true)) + ",";
   }
-  */
 
   // slot target
   if (el.slotTarget) {
@@ -2607,7 +2605,8 @@ function checkIdentifier (ident, type, text, errors) {
 }
 
 function checkExpression (exp, text, errors) {
-  try {
+  return;
+  /*try {
     new Function(("return " + exp));
   } catch (e) {
     var keywordMatch = exp.replace(stripStringRE, '').match(prohibitedKeywordRE);
@@ -2619,7 +2618,7 @@ function checkExpression (exp, text, errors) {
     } else {
       errors.push(("- invalid expression: " + text));
     }
-  }
+  }*/
 }
 
 /*  */
@@ -2735,7 +2734,7 @@ function transformNode$1 (el, options) {
 function genData$2 (el) {
   var data = '';
   if (el.staticStyle) {
-    data += "\"staticStyle\"=>" + (el.staticStyle) + ",";
+    data += "\"staticStyle\"=>" + transformExpression(el.staticStyle) + ",";
   }
   if (el.styleBinding) {
     data += "\"style\"=>(" + transformExpression(el.styleBinding) + "),";
@@ -2807,12 +2806,13 @@ function genCheckboxModel (
   var valueBinding = getBindingAttr(el, 'value') || 'null';
   var trueValueBinding = getBindingAttr(el, 'true-value') || 'true';
   var falseValueBinding = getBindingAttr(el, 'false-value') || 'false';
+  value = transformExpression(value);
   addProp(el, 'checked',
-    "Array.isArray(" + value + ")" +
-      "?_i(" + value + "," + valueBinding + ")>-1" + (
+    "is_array(" + value + ")" +
+      "?($this->_i(" + value + "," + valueBinding + ")>-1)" + (
         trueValueBinding === 'true'
           ? (":(" + value + ")")
-          : (":_q(" + value + "," + trueValueBinding + ")")
+          : (":$this->_q(" + value + "," + trueValueBinding + ")")
       )
   );
   addHandler(el, 'change',
@@ -2844,8 +2844,9 @@ function genRadioModel (
   }
   var number = modifiers && modifiers.number;
   var valueBinding = getBindingAttr(el, 'value') || 'null';
-  valueBinding = number ? ("_n(" + valueBinding + ")") : valueBinding;
-  addProp(el, 'checked', ("_q(" + value + "," + valueBinding + ")"));
+  valueBinding = number ? ("$this->_n(" + valueBinding + ")") : valueBinding;
+  value = transformExpression(value);
+  addProp(el, 'checked', ("$this->_q(" + value + "," + valueBinding + ")"));
   addHandler(el, 'change', genAssignmentCode(value, valueBinding), null, true);
 }
 
@@ -2902,6 +2903,7 @@ function genDefaultModel (
     );
   }
 
+  value = transformExpression(value);
   addProp(el, 'value', isNative ? ("$ctx->_s(" + value + ")") : ("(" + value + ")"));
   addHandler(el, event, code, null, true);
   if (trim || number || type === 'number') {

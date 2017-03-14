@@ -1,0 +1,31 @@
+{
+  "name": "vue-php",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node index.js ./components/myA/myA.vue ./components/myA/myA && node index.js ./components/myB/myB.vue ./components/myB/myB",
+    "test": "node test.js",
+    "all": "npm run build && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joe3Ray/vue-php.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Joe3Ray/vue-php/issues"
+  },
+  "homepage": "https://github.com/Joe3Ray/vue-php#readme",
+  "dependencies": {
+    "vue-to-js": "^0.9.2"
+  },
+  "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0",
+    "babel-preset-env": "^1.2.1",
+    "colors": "^1.1.2",
+    "vue": "^2.1.8"
+  }
+}
