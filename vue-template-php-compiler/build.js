@@ -2419,7 +2419,7 @@ function genScopedSlots (slots) {
 }
 
 function genScopedSlot (key, el) {
-  return '"' + key + '"' + "=>array(" + varExport(String(el.attrsMap.scope)) + ",function ($ctx){" +
+  return '' + key + '' + "=>array(" + varExport(String(el.attrsMap.scope)) + ",function ($ctx){" +
     "return " + (el.tag === 'template'
       ? genChildren(el) || 'void 0'
       : genElement(el)) + ";})"
@@ -2505,9 +2505,10 @@ function genSlot (el) {
 }
 
 // componentName is el.component, take it as argument to shun flow's pessimistic refinement
-function genComponent (componentName, el) {console.log(componentName);
+function genComponent (componentName, el) {
   var children = el.inlineTemplate ? null : genChildren(el, true);
-  return ("$ctx->_c('" + componentName + "'," + (genData(el)) + (children ? ("," + children) : '') + ")")
+  componentName = transformExpression(componentName);
+  return ("$ctx->_c(" + componentName + "," + (genData(el)) + (children ? ("," + children) : '') + ")")
 }
 
 function genProps (props) {

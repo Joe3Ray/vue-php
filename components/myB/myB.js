@@ -19,7 +19,7 @@ exports.default = {
     var obj = _module1.exports.default || _module1.exports;
 
     obj.data = function () {
-        return {data: 'hello vue',a: 'hoho',b: 'haha',rawHtml: '<div>aladdin</div>',dynamicId: 'myid',someDynamicCondition: false,number: 2,ok: true,seen: false,url: 'http://baidu.com',isActive: true,classObj: {isActive: 'true'},activeClass: true,errorClass: true,activeColor: 'red',fontSize: 30,styleObject: {color: 'red',fontSize: '13px'},baseStyles: {color: 'red',fontSize: '13px'},overridingStyles: {color: 'green'},type: 'A',items: {0: {message: 'Foo'},1: {message: 'Bar'}},checked: false,picked: '',selected: '',toggle: ''};
+        return {data: 'hello vue',a: 'hoho',b: 'haha',rawHtml: '<div>aladdin</div>',dynamicId: 'myid',someDynamicCondition: false,number: 2,ok: true,seen: false,url: 'http://baidu.com',isActive: true,classObj: {isActive: 'true'},activeClass: true,errorClass: true,activeColor: 'red',fontSize: 30,styleObject: {color: 'red',fontSize: '13px'},baseStyles: {color: 'red',fontSize: '13px'},overridingStyles: {color: 'green'},type: 'A',items: [{message: 'Foo'},{message: 'Bar'}],checked: false,picked: '',selected: '',toggle: ''};
     };
     obj.components = {myA: require('/Users/zhulei/Documents/demo/vue-php/components/myA/myA')};
     obj.template = `
@@ -150,7 +150,39 @@ exports.default = {
     </select>
     <input v-model.lazy="msg" >
     <!-- 组件 -->
-    <myA :tplData="data" v-on:increment="greet" v-on:input="greet"></myA>
+    <myA :tplData="data" ref="profile">
+        <p>content from parent</p>
+        <p slot="header">header from parent</p>
+        <template slot="item" scope="props">
+            <span>{{ props.text }}</span>
+        </template>
+    </myA>
+    <component v-bind:is="'myA'" :tplData="number"></component>
+    <keep-alive>
+        <component v-bind:is="'myA'" :tplData="number"></component>
+    </keep-alive>
+    <!-- 过渡效果 -->
+    <transition>
+        <table v-if="items.length > 0">
+            <tr>
+                <td></td>
+            </tr>
+        </table>
+        <p v-else>Sorry, no items found.</p>
+    </transition>
+    <transition name="component-fade" mode="out-in">
+        <component v-bind:is="myA"></component>
+    </transition>
+    <div>
+        <transition-group name="list" tag="p">
+            <span v-for="item in items" :key="item.message">{{item.message}}</span>
+        </transiton-group>
+    </div>
+    <div>
+        <transition-group name="list-a">
+            <span v-for="item in items" :key="item.message + 'aa'">{{item.message}}</span>
+        </transiton-group>
+    </div>
 </div>
 `;
 

@@ -50,7 +50,7 @@ function getRenderCnt($virtualDom, $isRoot=false) {
         $html .= renderStartingTag($virtualDom);
 
         $children = $virtualDom['children'];
-        if ($children && count($children) > 0) {
+        if (is_array($children) && count($children) > 0) {
             foreach ($children as $v) {
                 getRenderCnt($v);
             }
@@ -59,6 +59,14 @@ function getRenderCnt($virtualDom, $isRoot=false) {
         $tag = $virtualDom['tag'];
         if (!isUnaryTag($tag)) {
             $html .= '</' . $tag . '>';
+        }
+    }
+    elseif ($virtualDom['skipToChildren']) {
+        $children = $virtualDom['children'];
+        if (is_array($children) && count($children) > 0) {
+            foreach ($children as $v) {
+                getRenderCnt($v);
+            }
         }
     }
     elseif ($virtualDom['isComment']) {
@@ -93,6 +101,8 @@ function generateVNode($tag=null, $data=null, $children=null, $text=null, $elm=n
     $node['isComment'] = false;
     $node['isCloned'] = false;
     $node['isOnce'] = false;
+    // flag: 是否应该调过当前节点，直接渲染子节点
+    $node['skipToChildren'] = false;
     return $node;
 }
 

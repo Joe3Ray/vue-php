@@ -50,6 +50,8 @@ class Vue_Base {
         $node['isComment'] = false;
         $node['isCloned'] = false;
         $node['isOnce'] = false;
+        // flag: 是否应该调过当前节点，直接渲染子节点
+        $node['skipToChildren'] = false;
         return $node;
     }
 
@@ -141,11 +143,14 @@ class Vue_Base {
     }
 
     // 获取Vue实例相关信息
-    public static function resolveAsset($options, $type, $id) {
+    public static function resolveAsset($id) {
         if (!is_string($id)) {
             return;
         }
-        $assets = $options[$type];
+        $assets = array(
+            'myB' => 'components/myB/myB',
+            'myA' => 'components/myA/myA'
+        );
         if (isset($assets[$id])) {
             return $assets[$id];
         }
@@ -156,10 +161,6 @@ class Vue_Base {
         $pascalId = self::capitalize($id);
         if (isset($assets[$pascalId])) {
             return $assets[$pascalId];
-        }
-        $lowerId = strtolower($id);
-        if ($lowerId === 'keep-alive' || $lowerId === 'transition' || $lowerId === 'transition-group') {
-            return $lowerId;
         }
     }
 
@@ -176,6 +177,14 @@ class Vue_Base {
                 }
             }
         }
+    }
+
+    // 数据混合
+    public static function extendData($to, $from) {
+        foreach ($from as $k => $v) {
+            $to[$k] = $v;
+        }
+        return $to;
     }
 
     // 创建元素
@@ -199,15 +208,6 @@ class Vue_Base {
         elseif ($normalizationType === 1) {
             $children = self::simpleNormalizeChildren($children);
         }
-        if ($context && $children) {
-            $context->slots = array();
-            foreach($children as $child) {
-                if ($child['data'] && $child['data']['slot']) {
-                    $slotName = $child['data']['slot'];
-                    $context->slots[$slotName] = $child;
-                }
-            }
-        }
         $vnode = null;
         $ns = null;
         if (is_string($tag)) {
@@ -216,7 +216,36 @@ class Vue_Base {
             if (self::isReservedTag($tag)) {
                 $vnode = self::generateVNode(self::parsePlatformTagName($tag), $data, $children, null, null, $context);
             }
-            elseif ($Ctor = self::resolveAsset($context->options, 'components', $tag)) {
+            // 针对 keep-alive / transition 这2个内置组件
+            // 直接取子节点
+            elseif ($tag === 'keep-alive' || $tag === 'transition') {
+                $vnode = self::generateVNode(null, null, $children);
+                $vnode['skipToChildren'] = true;
+            }
+            // 针对transition-group
+            elseif ($tag === 'transition-group') {
+                $tag = 'span';
+                if (is_array($data) && is_array($data['attrs'])) {
+                    if (isset($data['attrs']['tag'])) {
+                        $tag = $data['attrs']['tag'];
+                        unset($data['attrs']['tag']);
+                    }
+                    $innerAttrs = array(
+                        'name','appear','css','mode','type','enter-class','leave-class',
+                        'enter-to-class','leave-to-class','enter-active-class','leave-active-class',
+                        'appear-class','appear-active-class','appear-to-class'
+                    );
+                    foreach ($data['attrs'] as $k => $v) {
+                        if (in_array($k, $innerAttrs)) {
+                            unset($data['attrs'][$k]);
+                        }
+                    }
+                }
+                $vnode = self::generateVNode($tag, $data, $children, null, null, $context);
+
+            }
+            // 根据attrs.tag（默认span）设置当前节点
+            elseif ($Ctor = self::resolveAsset($tag)) {
                 $vnode = self::createComponent($Ctor, $data, $context, $children, $tag);
             }
             else {
@@ -247,6 +276,26 @@ class Vue_Base {
         include_once(__DIR__ . '/' . $Ctor . '.php');
         $cls = 'Vue_' . $tag;
         $component = new $cls();
+        // 处理slot
+        if ($children && count($children) > 0) {
+            foreach ($children as $child) {
+                $slotName = 'default';
+                if ($child['data'] && $child['data']['slot']) {
+                    $slotName = $child['data']['slot'];
+                }
+                if (!is_array($component->slots[$slotName])) {
+                    $component->slots[$slotName] = array();
+                }
+                array_push($component->slots[$slotName], $child);
+            }
+        }
+
+        // 处理scopedSlots
+        if (is_array($data['scopedSlots'])) {
+            $component->scopedSlots = $data['scopedSlots'];
+        }
+
+        // 处理props
         $props = $data['attrs'];
         if (!$props) {
             $props = array();
@@ -275,6 +324,8 @@ class Vue_Base {
     public $options = array();
 
     public $scopedSlots = array();
+
+    public $slots = array();
 
     public function __construct() {
 
@@ -365,10 +416,20 @@ class Vue_Base {
     }
 
     // render slot
-    public function _t($name, $fallback/*, $props, $bindObject*/) {
+    public function _t($name, $fallback, $props=null, $bindObject=null) {
         $scopedSlotsFn = $this->scopedSlots[$name];
         if ($scopedSlotsFn && count($scopedSlotsFn) > 1) {
+            if (!is_array($props)) {
+                $props = array();
+            }
+            if (is_array($bindObject)) {
+                $props = self::extendData($props, $bindObject);
+            }
+            $propName = $scopedSlotsFn[0];
+            $originData = $this->_d[$propName];
+            $this->_d[$propName] = $props;
             $res = $scopedSlotsFn[1]($this);
+            $this->_d[$propName] = $originData;
         }
         else {
             $res = $this->slots[$name];
@@ -416,7 +477,41 @@ class Vue_Base {
 
     // to number
     public function _n($val) {
-        $n = floatval($val);
-        return ($n || $n === 0) ? $n : $val;
+        if (is_numeric($val)) {
+            return $val;
+        }
+        elseif (is_string($val)) {
+            $arr = str_split($val);
+            $ret = array();
+            $hasDot = false;
+            foreach ($arr as $v) {
+                preg_match("/\d|\./", $v, $match);
+                if (count($match) > 0 && ($v != '.' || !$hasDot)) {
+                    $ret[] = $v;
+                    if ($v === '.') {
+                        $hasDot = true;
+                    }
+                }
+                else {
+                    break;
+                }
+            }
+            $ret = join('', $ret);
+            return floatval($ret);
+        }
+        return $val;
+    }
+
+    // get length
+    public function _len($val) {
+        if (is_string($val)) {
+            return strlen($val);
+        }
+        elseif (self::isPlainArray($val)) {
+            return count($val);
+        }
+        else {
+            return $val['length'];
+        }
     }
 }

@@ -126,7 +126,39 @@
         </select>
         <input v-model.lazy="msg" >
         <!-- 组件 -->
-        <myA :tplData="data" v-on:increment="greet" v-on:input="greet"></myA>
+        <myA :tplData="data" ref="profile">
+            <p>content from parent</p>
+            <p slot="header">header from parent</p>
+            <template slot="item" scope="props">
+                <span>{{ props.text }}</span>
+            </template>
+        </myA>
+        <component v-bind:is="'myA'" :tplData="number"></component>
+        <keep-alive>
+            <component v-bind:is="'myA'" :tplData="number"></component>
+        </keep-alive>
+        <!-- 过渡效果 -->
+        <transition>
+            <table v-if="items.length > 0">
+                <tr>
+                    <td></td>
+                </tr>
+            </table>
+            <p v-else>Sorry, no items found.</p>
+        </transition>
+        <transition name="component-fade" mode="out-in">
+            <component v-bind:is="myA"></component>
+        </transition>
+        <div>
+            <transition-group name="list" tag="p">
+                <span v-for="item in items" :key="item.message">{{item.message}}</span>
+            </transiton-group>
+        </div>
+        <div>
+            <transition-group name="list-a">
+                <span v-for="item in items" :key="item.message + 'aa'">{{item.message}}</span>
+            </transiton-group>
+        </div>
     </div>
 </template>
 

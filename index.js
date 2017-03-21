@@ -41,22 +41,40 @@ function jsObjToPhpArr(obj) {
 
 function jsObjToStr(obj, fn) {
     fn = fn || function (str) {return "'" + str + "'";};
-    var ret = '{';
-    var keys = Object.keys(obj);
-    keys.forEach(function (e, i) {
-        var val = obj[e];
-        ret += e + ': ';
-        if (typeof val === 'object') {
-            ret += jsObjToStr(val);
-        }
-        else {
-            ret += fn(val);
-        }
-        if (i + 1 < keys.length) {
-            ret += ',';
-        }
-    });
-    ret += '}';
+    var ret = '';
+    if (Array.isArray(obj)) {
+        ret = '[';
+        obj.forEach(function (e, i) {
+            if (typeof e === 'object') {
+                ret += jsObjToStr(e);
+            }
+            else {
+                ret += fn(e);
+            }
+            if (i + 1 < obj.length) {
+                ret += ',';
+            }
+        });
+        ret += ']';
+    }
+    else {
+        ret = '{';
+        var keys = Object.keys(obj);
+        keys.forEach(function (e, i) {
+            var val = obj[e];
+            ret += e + ': ';
+            if (typeof val === 'object') {
+                ret += jsObjToStr(val);
+            }
+            else {
+                ret += fn(val);
+            }
+            if (i + 1 < keys.length) {
+                ret += ',';
+            }
+        });
+        ret += '}';
+    }
     return ret;
 }
 
