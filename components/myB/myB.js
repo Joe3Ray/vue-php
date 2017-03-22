@@ -19,7 +19,7 @@ exports.default = {
     var obj = _module1.exports.default || _module1.exports;
 
     obj.data = function () {
-        return {data: 'hello vue',a: 'hoho',b: 'haha',rawHtml: '<div>aladdin</div>',dynamicId: 'myid',someDynamicCondition: false,number: 2,ok: true,seen: false,url: 'http://baidu.com',isActive: true,classObj: {isActive: 'true'},activeClass: true,errorClass: true,activeColor: 'red',fontSize: 30,styleObject: {color: 'red',fontSize: '13px'},baseStyles: {color: 'red',fontSize: '13px'},overridingStyles: {color: 'green'},type: 'A',items: [{message: 'Foo'},{message: 'Bar'}],checked: false,picked: '',selected: '',toggle: ''};
+        return {data: 'hello vue',a: 'hoho',b: 'haha',rawHtml: '<div>aladdin</div>',dynamicId: 'myid',someDynamicCondition: false,number: 2,ok: true,seen: false,url: 'http://baidu.com',isActive: true,classObj: {isActive: 'true'},activeClass: true,errorClass: true,activeColor: 'red',fontSize: 30,styleObject: {color: 'red',fontSize: '13px'},baseStyles: {color: 'red',fontSize: '13px'},overridingStyles: {color: 'green'},type: 'A',items: [{message: 'Foo'},{message: 'Bar'}],checked: false,picked: '',selected: '',toggle: '',msg: ''};
     };
     obj.components = {myA: require('/Users/zhulei/Documents/demo/vue-php/components/myA/myA')};
     obj.template = `
@@ -171,7 +171,7 @@ exports.default = {
         <p v-else>Sorry, no items found.</p>
     </transition>
     <transition name="component-fade" mode="out-in">
-        <component v-bind:is="myA"></component>
+        <component v-bind:is="'myA'"></component>
     </transition>
     <div>
         <transition-group name="list" tag="p">

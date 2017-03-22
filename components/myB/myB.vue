@@ -147,7 +147,7 @@
             <p v-else>Sorry, no items found.</p>
         </transition>
         <transition name="component-fade" mode="out-in">
-            <component v-bind:is="myA"></component>
+            <component v-bind:is="'myA'"></component>
         </transition>
         <div>
             <transition-group name="list" tag="p">
@@ -215,7 +215,8 @@
             "checked": false,
             "picked": "",
             "selected": "",
-            "toggle": ""
+            "toggle": "",
+            "msg": ""
         },
         "components": {
             "myA": "components/myA/myA"
