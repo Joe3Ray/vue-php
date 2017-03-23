@@ -16,7 +16,7 @@ exports.default = {
     var obj = _module1.exports.default || _module1.exports;
 
     obj.data = function () {
-        return {a: 123,b: false,items: ['123','456']};
+        return {"a": 123,"b": false,"items": ['123','456']};
     };
     obj.components = {};
     obj.template = `

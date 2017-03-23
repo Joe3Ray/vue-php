@@ -2,15 +2,16 @@ var vuetojs = require('vue-to-js');
 var path = require('path');
 var fs = require('fs');
 
-var filepath = path.resolve(__dirname, process.argv[2]);
-var filename = path.parse(filepath).name;
-var blocks = vuetojs.getBlocks(filepath);
+var compName = process.argv[2];
+var compPath = path.resolve(__dirname, 'components', compName, 'index.vue');
+var blocks = vuetojs.getBlocks(compPath);
 
+var config;
 try {
-    var config = JSON.parse(blocks.config[0].code);
+    config = JSON.parse(blocks.config[0].code);
 }
 catch (e) {
-    throw e;
+    config = {};
 }
 
 var configData = config.data ? jsObjToPhpArr(config.data) : 'array()';
@@ -62,7 +63,7 @@ function jsObjToStr(obj, fn) {
         var keys = Object.keys(obj);
         keys.forEach(function (e, i) {
             var val = obj[e];
-            ret += e + ': ';
+            ret += '"' + e + '": ';
             if (typeof val === 'object') {
                 ret += jsObjToStr(val);
             }
@@ -80,9 +81,7 @@ function jsObjToStr(obj, fn) {
 
 var template = blocks.template.code;
 var phpCompiler = require('./vue-template-php-compiler/build');
-//var jsCompiler = require('./vue-template-compiler/build');
 var phpInfo = phpCompiler.compile(template);
-//var jsInfo = jsCompiler.compile(template);
 
 var styleCode = blocks.styles.map(function (e, i) {
     return e.code;
@@ -91,11 +90,18 @@ var styleCode = blocks.styles.map(function (e, i) {
 var phpRender = phpInfo.render;
 var phpStaticRender = phpInfo.staticRenderFns;
 
+var className = compName.replace(/-/g, '_');
+className = className.split('_').map(function (e, i) {
+    var chars = e.split('');
+    chars[0] = chars[0].toUpperCase();
+    return chars.join('');
+}).join('_');
+
 var phpCode = `
     <?php
         include_once('Vue_Base.php');
 
-        class Vue_${filename} extends Vue_Base {
+        class ${className} extends Vue_Base {
 
             public $_d = ${configData};
             public $options = array(
@@ -114,15 +120,10 @@ var phpCode = `
                 ${phpRender}
             }
         }
-
-        /*
-        $instance = new Vue_${filename}();
-        $virtualDom = $instance->render($instance);
-        echo json_encode($virtualDom);
-        */
 `;
 
-fs.writeFileSync(process.argv[3] + '.php', phpCode);
+var phpPath = path.resolve(__dirname, 'components', compName, 'index.php');
+fs.writeFileSync(phpPath, phpCode);
 
 var transform = require('babel-core').transform;
 
@@ -166,4 +167,5 @@ var jsCode = `
     module.exports = obj;
 `;
 
-fs.writeFileSync(process.argv[3] + '.js', jsCode);
+var jsPath = path.resolve(__dirname, 'components', compName, 'index.js');
+fs.writeFileSync(jsPath, jsCode);

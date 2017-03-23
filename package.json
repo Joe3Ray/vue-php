@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "node index.js ./components/myA/myA.vue ./components/myA/myA && node index.js ./components/myB/myB.vue ./components/myB/myB",
-    "test": "node test.js",
+    "build": "node build.js",
+    "test": "mocha",
     "all": "npm run build && npm test"
   },
   "repository": {
@@ -19,13 +19,16 @@
   },
   "homepage": "https://github.com/Joe3Ray/vue-php#readme",
   "dependencies": {
-    "vue-to-js": "^0.9.2"
+    "vue-to-js": "^0.9.3"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0",
     "babel-preset-env": "^1.2.1",
+    "chai": "^3.5.0",
     "colors": "^1.1.2",
-    "vue": "^2.1.8"
+    "mocha": "^3.2.0",
+    "vue": "^2.2.4",
+    "vue-server-renderer": "^2.2.4"
   }
 }

@@ -4,9 +4,19 @@ require_once(__DIR__ . '/VNode.php');
 
 // 配置
 $config = array(
-    'class_prefix' => 'Vue_',
+    'class_name' => function ($tag) {
+        $str = str_replace('-', '_', $tag);
+        $arr = explode('_', $str);
+        $res = array();
+        foreach ($arr as $v) {
+            $v[0] = strtoupper($v[0]);
+            $res[] = $v;
+        }
+        $str = join('_', $res);
+        return $str;
+    },
     'path' => function ($tag) {
-        return __DIR__ . '/components/' . $tag . '/' . $tag . '.php';
+        return __DIR__ . '/components/' . $tag . '/index.php';
     }
 );
 
@@ -267,7 +277,7 @@ class Vue_Base {
         }
         global $config;
         include_once($Ctor);
-        $cls = $config['class_prefix'] . $tag;
+        $cls = $config['class_name']($tag);
         $component = new $cls();
         // 处理slot
         if ($children && count($children) > 0) {
@@ -769,7 +779,7 @@ class Vue_Base {
             foreach ($style as $k => $v) {
                 $markup .= $k . ':' . $v . ';';
             }
-            $markup = substr($markup, 0, -1);
+            //$markup = substr($markup, 0, -1);
             $markup .= '"';
         }
 
