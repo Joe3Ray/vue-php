@@ -11,7 +11,7 @@ function jsRenderer(app) {
     return new Promise((resolve, reject) => {
         renderer.renderToString(app, (err, html) => {
             if (err) {
-                reject();
+                reject('js render error');
             }
             else {
                 html = html.trim();
@@ -31,7 +31,7 @@ function phpRenderer(name) {
                 resolve(html);
             }
             else {
-                reject();
+                reject('php render error');
             }
         });
     });
