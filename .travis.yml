@@ -7,6 +7,8 @@ php:
 # 要测试的nodejs版本
 node_js: "6"
 
+install: "npm install"
+
 # 是否sudo身份
 sudo: false
 
