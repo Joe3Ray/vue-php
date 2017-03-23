@@ -47,7 +47,7 @@
             ]
         },
         "components": {
-            "vue-com": "components/vue-com"
+            "vue-com": "../vue-com"
         }
     }
 </config>

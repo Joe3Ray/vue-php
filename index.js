@@ -145,7 +145,7 @@ var jsData = config.data ? jsObjToStr(config.data, function (str) {
     }
 }) : '{}';
 var jsComponents = config.components ? jsObjToStr(config.components, function (str) {
-    var filepath = path.resolve(__dirname, str);
+    var filepath = str;
     return 'require(\'' + filepath + '\')';
 }) : '{}';
 var jsCode = `
