@@ -11,4 +11,4 @@ sudo: false
 
 # 运行的脚本，这个脚本必须你本地能跑通，且通过
 script:
-    - "npm test"
+    - "npm run all"
