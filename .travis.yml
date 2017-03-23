@@ -1,10 +1,11 @@
 # 语言
-language: node_js
+language: php
+
+php:
+  - "5.5"
 
 # 要测试的nodejs版本
-node_js:
-  - "6"
-  - "7"
+node_js: "6"
 
 # 是否sudo身份
 sudo: false
