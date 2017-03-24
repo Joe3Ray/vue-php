@@ -25,7 +25,7 @@ var child = require('child_process');
 
 function phpRenderer(name) {
     return new Promise((resolve, reject) => {
-        child.exec('php index.php ' + name, (err, stdout, stderr) => {
+        child.exec('php -n index.php ' + name, (err, stdout, stderr) => {
             if (!err && !stderr) {
                 var html = stdout.trim();
                 resolve(html);
