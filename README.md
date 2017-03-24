@@ -32,7 +32,7 @@ $ npm test
 由于不同语言的限制，我们在使用`vue-php`进行服务端渲染时也有一些限制：
 
 - `.vue`文件中，组件的`data`和`components`属性必须单独放到`<config>`中，并且是`json`形式
-- `template`中模板使用js表达式时，不能调用函数
+- `template`中模板使用js表达式时，不能调用函数，不能使用计算属性
 
 ## 接入
 
