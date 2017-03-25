@@ -2259,11 +2259,11 @@ function genData (el) {
 
   // key
   if (el.key) {
-    data += "\"key\"=>" + (el.key) + ",";
+    data += "\"key\"=>" + transformExpression(el.key) + ",";
   }
   // ref
   if (el.ref) {
-    data += "\"ref\"=>" + (el.ref) + ",";
+    data += "\"ref\"=>" + transformExpression(el.ref) + ",";
   }
   if (el.refInFor) {
     data += "\"refInFor\"=>true,";
