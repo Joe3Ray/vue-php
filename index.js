@@ -24,6 +24,7 @@ function jsObjToPhpArr(obj) {
         var val = obj[e];
         ret += '"' + e + '" => ';
         if (typeof val === 'string') {
+            val = val.replace(/(["'])/g, '\\$1');
             ret += '"' + val + '"';
         }
         else if (typeof val === 'object') {
@@ -97,8 +98,7 @@ className = className.split('_').map(function (e, i) {
     return chars.join('');
 }).join('_');
 
-var phpCode = `
-    <?php
+var phpCode = `<?php
         include_once('Vue_Base.php');
 
         class ${className} extends Vue_Base {
@@ -116,7 +116,7 @@ var phpCode = `
                 `;
             }).join('\n')}
 
-            public function render($ctx) {
+            public function _render($ctx) {
                 ${phpRender}
             }
         }
