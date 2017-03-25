@@ -16,5 +16,5 @@ $cls = getClassName($name);
 $filePath = __DIR__ . '/components/' . $name . '/index.php';
 include_once($filePath);
 $instance = new $cls();
-$info = $instance->_render();
+$info = $instance->render();
 echo $info['html'];
