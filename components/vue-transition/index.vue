@@ -10,7 +10,7 @@
             <p v-else>Sorry, no items found.</p>
         </transition>
         <transition name="component-fade" mode="out-in">
-            <component v-bind:is="'vue-com'"></component>
+            <component v-bind:is="'vue-com'" tplData="111"></component>
         </transition>
         <div>
             <transition-group name="list" tag="p">

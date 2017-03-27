@@ -42,24 +42,6 @@ class VNode {
     }
 }
 
-// 配置
-$config = array(
-    'class_name' => function ($tag) {
-        $str = str_replace('-', '_', $tag);
-        $arr = explode('_', $str);
-        $res = array();
-        foreach ($arr as $v) {
-            $v[0] = strtoupper($v[0]);
-            $res[] = $v;
-        }
-        $str = join('_', $res);
-        return $str;
-    },
-    'path' => function ($tag) {
-        return __DIR__ . '/components/' . $tag . '/index.php';
-    }
-);
-
 /**
  * class Vue_Base
  * Vue基类
@@ -85,6 +67,25 @@ class Vue_Base {
             return true;
         }
         return false;
+    }
+
+    // 组件目录
+    private $componentsDir = array('./');
+
+    // 设置组件目录
+    public function setComponentsDir($dirs) {
+        if (isset($dirs)) {
+            if (is_string($dirs)) {
+                array_unshift($this->componentsDir, $dirs);
+            }
+            elseif ($this->isPlainArray($dirs)) {
+                foreach($dirs as $dir) {
+                    if (is_string($dir)) {
+                        array_unshift($this->componentsDir, $dir);
+                    }
+                }
+            }
+        }
     }
 
     // VNode工厂
@@ -122,13 +123,15 @@ class Vue_Base {
             if ($c == null || is_bool($c)) {
                 continue;
             }
-            $last = $res[count($res) - 1];
+            if (count($res) > 1) {
+                $last = $res[count($res) - 1];
+            }
             // nested
             if ($this->isPlainArray($c)) {
                 $res = array_merge($res, $this->normalizeArrayChildren($c, $nestedIndex . '_' . $i));
             }
             elseif ($this->isPrimitive($c)) {
-                if ($last && $last->text) {
+                if (isset($last) && isset($last->text)) {
                     $last->text .= (string)$c;
                 }
                 elseif ($c !== '') {
@@ -136,7 +139,7 @@ class Vue_Base {
                 }
             }
             else {
-                if ($c->text && $last && $last->text) {
+                if ($c->text && isset($last) && $last->text) {
                     $res[count($res) - 1] = $this->createTextVNode($last->text . $c->text);
                 }
                 else {
@@ -185,25 +188,15 @@ class Vue_Base {
         if (!is_string($id)) {
             return;
         }
-        if ($this->options['components'][$id]) {
-            global $config;
-            return $config['path']($id);
+        if (isset($this->options['components']) && isset($this->options['components'][$id])) {
+            foreach ($this->componentsDir as $dir) {
+                $path = $dir . '/' . $id . '/index.php';
+                $path = str_replace('//', '/', $path);
+                if (file_exists($path)) {
+                    return $path;
+                }
+            }
         }
-        /*$assets = array(
-            'myB' => 'components/myB/myB',
-            'myA' => 'components/myA/myA'
-        );
-        if (isset($assets[$id])) {
-            return $assets[$id];
-        }
-        $camelizeId = $this->camelize($id);
-        if (isset($assets[$camelizeId])) {
-            return $assets[$camelizeId];
-        }
-        $pascalId = $this->capitalize($id);
-        if (isset($assets[$pascalId])) {
-            return $assets[$pascalId];
-        }*/
     }
 
     public function applyNS($vnode, $ns) {
@@ -310,14 +303,26 @@ class Vue_Base {
         }
     }
 
+    public function handleClsName($tag) {
+        $str = str_replace('-', '_', $tag);
+        $arr = explode('_', $str);
+        $res = array();
+        foreach ($arr as $v) {
+            $v[0] = strtoupper($v[0]);
+            $res[] = $v;
+        }
+        $str = join('_', $res);
+        return $str;
+    }
+
     // 创建组件
     public function createComponent($Ctor, $data, $context, $children, $tag) {
         if (!$Ctor) {
             return;
         }
-        global $config;
+
         include_once($Ctor);
-        $cls = $config['class_name']($tag);
+        $cls = $this->handleClsName($tag);
         $component = new $cls();
         // 处理slot
         if ($children && count($children) > 0) {
@@ -326,7 +331,7 @@ class Vue_Base {
                 if ($child->data && $child->data['slot']) {
                     $slotName = $child->data['slot'];
                 }
-                if (!is_array($component->slots[$slotName])) {
+                if (!isset($component->slots[$slotName]) || !is_array($component->slots[$slotName])) {
                     $component->slots[$slotName] = array();
                 }
                 array_push($component->slots[$slotName], $child);
@@ -334,14 +339,14 @@ class Vue_Base {
         }
 
         // 处理scopedSlots
-        if (is_array($data['scopedSlots'])) {
+        if (isset($data['scopedSlots']) && is_array($data['scopedSlots'])) {
             $component->scopedSlots = $data['scopedSlots'];
         }
 
         // 处理props
-        $props = $data['attrs'];
-        if (!$props) {
-            $props = array();
+        $props = array();
+        if (isset($data['attrs'])) {
+            $props = $data['attrs'];
         }
         foreach ($props as $k => $v) {
             $component->_d[$k] = $v;
@@ -385,7 +390,7 @@ class Vue_Base {
 
     // create element
     public function _c($a=null, $b=null, $c=null, $d=null) {
-        if ($b['scopedSlots']) {
+        if (isset($b['scopedSlots'])) {
             $this->scopedSlots = $b['scopedSlots'];
         }
         
@@ -432,9 +437,15 @@ class Vue_Base {
             return;
         }
         $ret = array();
-        $originAlias = $this->_d[$alias];
-        $originIterator1 = $this->_d[$iterator1];
-        $originIterator2 = $this->_d[$iterator2];
+        if (isset($this->_d[$alias])) {
+            $originAlias = $this->_d[$alias];
+        }
+        if (isset($this->_d[$iterator1])) {
+            $originIterator1 = $this->_d[$iterator1];
+        }
+        if (isset($this->_d[$iterator2])) {
+            $originIterator2 = $this->_d[$iterator2];
+        }
         if (is_string($arr)) {
             $arr = str_split($arr);
         }
@@ -452,16 +463,24 @@ class Vue_Base {
                 array_push($ret, $fn($this));
             }
         }
-        $this->_d[$alias] = $originAlias;
-        $this->_d[$iterator1] = $originIterator1;
-        $this->_d[$iterator2] = $originIterator2;
+        if (isset($originAlias)) {
+            $this->_d[$alias] = $originAlias;
+        }
+        if (isset($originIterator1)) {
+            $this->_d[$iterator1] = $originIterator1;
+        }
+        if (isset($originIterator2)) {
+            $this->_d[$iterator2] = $originIterator2;
+        }
         return $ret;
     }
 
     // render slot
     public function _t($name, $fallback, $props=null, $bindObject=null) {
-        $scopedSlotsFn = $this->scopedSlots[$name];
-        if ($scopedSlotsFn && count($scopedSlotsFn) > 1) {
+        if (isset($this->scopedSlots[$name])) {
+            $scopedSlotsFn = $this->scopedSlots[$name];
+        }
+        if (isset($scopedSlotsFn) && is_array($scopedSlotsFn) && count($scopedSlotsFn) > 1) {
             if (!is_array($props)) {
                 $props = array();
             }
@@ -469,15 +488,19 @@ class Vue_Base {
                 $props = $this->extendData($props, $bindObject);
             }
             $propName = $scopedSlotsFn[0];
-            $originData = $this->_d[$propName];
+            if (isset($this->_d[$propName])) {
+                $originData = $this->_d[$propName];
+            }
             $this->_d[$propName] = $props;
             $res = $scopedSlotsFn[1]($this);
-            $this->_d[$propName] = $originData;
+            if (isset($originData)) {
+                $this->_d[$propName] = $originData;
+            }
         }
-        else {
+        elseif (isset($this->slots[$name])) {
             $res = $this->slots[$name];
         }
-        return $res ? $res : $fallback;
+        return isset($res) ? $res : $fallback;
     }
 
     // create empty node
@@ -587,9 +610,8 @@ class Vue_Base {
     }
 
     public function getRenderCnt($virtualDom, $isRoot=false) {
-        $style = $virtualDom->context->style;
-        if ($style) {
-            $this->css[] = $style;
+        if (isset($virtualDom->context->style)) {
+            $this->css[] = $virtualDom->context->style;
         }
         if ($virtualDom->tag) {
             if ($isRoot) {
@@ -785,16 +807,18 @@ class Vue_Base {
 
         // 处理class
         $cls = array();
-        if ($data['staticClass']) {
+        if (isset($data['staticClass'])) {
             array_push($cls, $data['staticClass']);
         }
-        $cls = array_merge($cls, $this->handleClass($data['class']));
+        if (isset($data['class'])) {
+            $cls = array_merge($cls, $this->handleClass($data['class']));
+        }
         if (count($cls) > 0) {
             $markup .= ' class="' . join(' ', $cls) . '"';
         }
 
         // 处理directives
-        if ($data['directives']) {
+        if (isset($data['directives'])) {
             $dirs = $data['directives'];
             foreach ($dirs as $dir) {
                 if ($dir['name'] === 'show' && !$dir['value']) {
@@ -808,10 +832,10 @@ class Vue_Base {
 
         // 处理style
         $style = array();
-        if ($data['staticStyle']) {
+        if (isset($data['staticStyle'])) {
             $style = $this->handleArrayKey($data['staticStyle']);
         }
-        if ($data['style']) {
+        if (isset($data['style'])) {
             $style = array_merge($style, $this->handleStyle($data['style']));
         }
         if (count($style) > 0) {
@@ -854,9 +878,13 @@ class Vue_Base {
 
     // 处理vnode的domProps属性
     public function renderDomProps(&$data, &$children) {
-        $props = $data['domProps'];
-        if (is_array($props) && count($props) > 0) {
-            $attrs = $data['attrs'];
+        if (isset($data['domProps'])) {
+            $props = $data['domProps'];
+        }
+        if (isset($props) && is_array($props) && count($props) > 0) {
+            if (isset($data['attrs'])) {
+                $attrs = $data['attrs'];
+            }
             foreach ($props as $k => $v) {
                 if ($k === 'innerHTML') {
                     $child = $this->generateVNode(null, null, null, $v);
@@ -874,12 +902,14 @@ class Vue_Base {
                         'htmlFor' => 'for',
                         'httpEquiv' => 'http-equiv'
                     );
-                    $attr = $propsToAttrMap[$k];
-                    if (!$attr) {
+                    if (isset($propsToAttrMap[$k])) {
+                        $attr = $propsToAttrMap[$k];
+                    }
+                    if (!isset($attr)) {
                         $attr = strtolower($k);
                     }
-                    if ($this->isValidAttr($attr) && !($attrs && $attrs[$attr])) {
-                        if (!$attrs) {
+                    if (isset($attr) && $this->isValidAttr($attr) && !(isset($attrs) && isset($attrs[$attr]))) {
+                        if (!isset($attrs)) {
                             $data['attrs'] = array();
                         }
                         $data['attrs'][$attr] = $v;

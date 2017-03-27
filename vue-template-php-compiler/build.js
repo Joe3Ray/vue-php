@@ -3219,7 +3219,7 @@ function genCheckboxModel (
       "?($this->_i(" + value + "," + valueBinding + ")>-1)" + (
         trueValueBinding === 'true'
           ? (":(" + value + ")")
-          : (":$this->_q(" + value + "," + trueValueBinding + ")")
+          : (":$this->_q(" + value + "," + transformExpression(trueValueBinding) + ")")
       )
   );
   addHandler(el, CHECKBOX_RADIO_TOKEN,
