@@ -598,7 +598,10 @@ class Vue_Base {
     public function _render($ctx) {}
 
     // render
-    public function render() {
+    public function render($data = null) {
+        if (isset($data) && is_array($data)) {
+            $this->_d = $data;
+        }
         $vnode = $this->_render($this);
         if ($vnode instanceof VNode) {
             $this->getRenderCnt($vnode, true);
