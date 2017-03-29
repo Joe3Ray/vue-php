@@ -600,7 +600,7 @@ class Vue_Base {
     // render
     public function render($data = null) {
         if (isset($data) && is_array($data)) {
-            $this->_d = $data;
+            $this->_d = array_merge_recursive($data, $this->_d);
         }
         $vnode = $this->_render($this);
         if ($vnode instanceof VNode) {
