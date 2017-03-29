@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="vue-container">
         <!-- 普通差值 -->
         <p>{{ a }}</p>
         <!-- 单次渲染 -->
@@ -18,6 +18,10 @@
 <script>
     export default {};
 </script>
+
+<style>
+    .vue-container {color: red;}
+</style>
 
 <config>
     {

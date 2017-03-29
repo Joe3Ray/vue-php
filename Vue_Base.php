@@ -608,7 +608,7 @@ class Vue_Base {
         }
         return array(
             'html' => $this->html,
-            'css' => array_unique($this->css)
+            'css' => join('', array_unique($this->css))
         );
     }
 
