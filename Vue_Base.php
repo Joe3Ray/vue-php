@@ -27,8 +27,10 @@ class VNode {
     public $isOnce = false;
     // flag: 是否应该调过当前节点，直接渲染子节点
     public $skipToChildren = false;
+    // flag: 是否是组件
+    public $isComponent = false;
 
-    public function __construct($tag=null, $data=null, $children=null, $text=null, $elm=null, $context=null, $componentOptions=null) {
+    public function __construct($tag=null, $data=array(), $children=null, $text=null, $elm=null, $context=null, $componentOptions=null) {
         $this->tag = $tag;
         $this->data = $data;
         $this->children = $children;
@@ -89,7 +91,7 @@ class Vue_Base {
     }
 
     // VNode工厂
-    public function generateVNode($tag=null, $data=null, $children=null, $text=null, $elm=null, $context=null, $componentOptions=null) {
+    public function generateVNode($tag=null, $data=array(), $children=null, $text=null, $elm=null, $context=null, $componentOptions=null) {
         $node = new VNode($tag, $data, $children, $text, $elm, $context, $componentOptions);
         return $node;
     }
@@ -321,6 +323,9 @@ class Vue_Base {
             return;
         }
 
+        $vnode = $this->generateVNode($tag, $data);
+        $vnode->isComponent = true;
+
         include_once($Ctor);
         $cls = $this->handleClsName($tag);
         $component = new $cls();
@@ -351,7 +356,8 @@ class Vue_Base {
         foreach ($props as $k => $v) {
             $component->_d[$k] = $v;
         }
-        return $component->_render($component);
+        $vnode->children =  array($component->_render($component));
+        return $vnode;
     }
     public function _f_lower($args) {
         $val = $args[0];
@@ -617,6 +623,33 @@ class Vue_Base {
             $this->css[] = $virtualDom->context->style;
         }
         if ($virtualDom->tag) {
+            if ($virtualDom->isComponent) {
+                $children = $virtualDom->children[0];
+                // 合并staticClass
+                $staticClass = array();
+                if (isset($children->data['staticClass'])){
+                    array_push($staticClass, $children->data['staticClass']);
+                }
+                if (isset($virtualDom->data['staticClass'])) {
+                    array_push($staticClass, $virtualDom->data['staticClass']);
+                }
+                $staticClass = join(' ', $staticClass);
+                if ($staticClass != '') {
+                    $children->data['staticClass'] = $staticClass;
+                }
+                // 合并class
+                $klass = array();
+                if (isset($children->data['class'])) {
+                    $klass = $this->handleClass($children->data['class']);
+                }
+                if (isset($virtualDom->data['class'])) {
+                    $klass = array_merge($klass, $this->handleClass($virtualDom->data['class']));
+                }
+                if (count($klass) > 0) {
+                    $children->data['class'] = $klass;
+                }
+                $virtualDom = $children;
+            }
             if ($isRoot) {
                 if (!isset($virtualDom->data) || !is_array($virtualDom->data)) {
                     $virtualDom->data = array();
@@ -724,6 +757,9 @@ class Vue_Base {
                     }
                 }
             }
+        }
+        elseif (is_string($arr)) {
+            array_push($ret, $arr);
         }
 
         return $ret;
