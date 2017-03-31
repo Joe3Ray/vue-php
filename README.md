@@ -16,8 +16,7 @@ $ npm test
 
 - `index.js`: 将`.vue`编译成`.js`和`.php`的脚本，编译出来的`.js`用于前端渲染，`.php`用于服务端的渲染
 - `build.js`: 批量将`components`中的各个组件调用`index.js`来编译的脚本
-- `VNode.php`: 使用php实现的`virtual dom`类
-- `Vue_Base.php`: 使用php实现的Vue基类，只包含渲染功能
+- `Vue_Base.php`: 使用php实现的Vue基类，包含渲染功能
 - `index.php`: 调用php版的Vue组件class渲染出html字符串的示例
 - `test.js`: 单元测试脚本
 - `componenets/**`: 组件示例
