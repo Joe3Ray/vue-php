@@ -28,7 +28,7 @@
     "chai": "^3.5.0",
     "colors": "^1.1.2",
     "mocha": "^3.2.0",
-    "vue": "^2.2.4",
-    "vue-server-renderer": "^2.2.4"
+    "vue": "2.2.4",
+    "vue-server-renderer": "2.2.4"
   }
 }
