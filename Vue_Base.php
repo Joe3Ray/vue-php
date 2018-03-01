@@ -807,7 +807,7 @@ class Vue_Base {
             foreach ($data['attrs'] as $k => $v) {
                 if ($this->isBooleanAttr($k)) {
                     if (!$this->isFalsyAttrValue($v)) {
-                        $markup .= ' ' . $k . '="' . $k . '"';
+                        $markup .= ' ' . $k . '="' . $v . '"';
                     }
                 }
                 elseif ($this->isEnumeratedAttr($k)) {
